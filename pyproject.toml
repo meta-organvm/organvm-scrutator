@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "organvm-scrutator"
+version = "0.1.0"
+description = "Self-auditing governance system that scrutinizes itself"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "ORGANVM System", email = "system@organvm.io"}
+]
+keywords = ["governance", "audit", "metrics", "self-reference", "observability"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "rich>=13.0",
+    "gitpython>=3.1",
+    "tree-sitter>=0.21",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "pre-commit>=3.6",
+]
+
+[project.scripts]
+organvm-scrutator = "organvm_scrutator.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/organvm_scrutator"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

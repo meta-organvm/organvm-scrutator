@@ -1,0 +1,58 @@
+name: Daily Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 2 AM daily
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -e .
+      
+      - name: Run scan
+        run: |
+          organvm-scrutator scan
+          organvm-scrutator stats
+      
+      - name: Check for gaps
+        run: organvm-scrutator gaps
+      
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: daily scrutator scan"
+          file_pattern: "data/**"
+
+  dispatch:
+    needs: scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install -e .
+      
+      - name: Dispatch research inquiries
+        run: organvm-scrutator dispatch --threshold 3
+      
+      - name: Commit inquiries
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: dispatch research inquiries"
+          file_pattern: "data/**"

@@ -1,0 +1,33 @@
+#!/usr/bin/env zsh
+# organvm-scrutator pre-commit hook
+# Run at session close to record metrics
+
+# This hook is intended to be called by the session close protocol
+# It records session energy and checks for research opportunities
+
+set -euo pipefail
+
+SCRUTATOR_HOME="${HOME}/Workspace/organvm/organvm-scrutator"
+
+# Check if scrutator is installed
+if ! command -v organvm-scrutator &> /dev/null; then
+    echo "organvm-scrutator not installed, skipping session metrics"
+    exit 0
+fi
+
+# Check for session ID
+if [[ -z "${SCRUTATOR_SESSION_ID:-}" ]]; then
+    echo "No SCRUTATOR_SESSION_ID set, skipping"
+    exit 0
+fi
+
+echo "Recording session metrics for $SCRUTATOR_SESSION_ID"
+
+# Run energy analysis
+organvm-scrutator energy
+
+# Check for gaps
+organvm-scrutator gaps
+
+# Export metrics to indices
+echo "Session metrics recorded successfully"
