@@ -1,0 +1,20 @@
+# Generated inventory artifacts
+data/inventory/repos.jsonl
+data/inventory/repos.categorized.jsonl
+
+# Generated raw data ledgers
+data/raw/*.jsonl
+data/research/*.jsonl
+data/indices/*.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store
