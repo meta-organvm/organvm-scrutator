@@ -1,6 +1,7 @@
 # Generated inventory artifacts
 data/inventory/repos.jsonl
 data/inventory/repos.categorized.jsonl
+data/inventory/transfer-log.jsonl
 
 # Generated raw data ledgers
 data/raw/*.jsonl

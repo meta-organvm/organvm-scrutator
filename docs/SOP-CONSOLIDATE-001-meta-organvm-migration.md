@@ -93,7 +93,7 @@ Commit `transfer-plan.md` with the decisions filled in before proceeding to Phas
 
 ### Phase B — Execute Transfers
 
-#### 4.4 Per-repo pre-flight
+#### 4.4 Per-repo pre-flight (manual)
 
 For each row marked `transfer*` in the signed-off plan, verify before transferring:
 
@@ -108,25 +108,37 @@ For each row marked `transfer*` in the signed-off plan, verify before transferri
 | Deploy keys | Carry, but rotate if compromised in transit |
 | Submodule URLs in dependent repos | Old URL serves a 301 redirect, but pin to new URL on next bump |
 
-#### 4.5 Transfer order
-
-Lowest blast radius first:
-
-1. **Archived** — read-only, no live consumers
-2. **Private** — limited audience
-3. **Public** — most external link surface; do last
-4. **Forks** — deferred indefinitely; decide per row
-
-#### 4.6 Name-conflict resolution
-
-For rows with `action == rename_then_transfer`, rename the source first:
+#### 4.5 Execute transfers (`scripts/execute_transfers.sh`)
 
 ```bash
+# Dry run first — prints planned actions, writes log entries with outcome="dry_run".
+bash scripts/execute_transfers.sh
+
+# Iterate by bucket, lowest blast radius first.
+bash scripts/execute_transfers.sh --only rename_then_transfer --execute
+bash scripts/execute_transfers.sh --only transfer_archived    --execute
+bash scripts/execute_transfers.sh --only transfer_private     --execute
+bash scripts/execute_transfers.sh --only transfer_public      --execute
+```
+
+Defaults / guarantees:
+
+- Dry-run unless `--execute` is passed. No `gh` mutation without it.
+- Skips `keep_on_profile`, `defer_fork`, `skip_*` automatically.
+- Logs every attempt to `data/inventory/transfer-log.jsonl` (appended, not truncated).
+- Lowest blast radius first: archived → private → public. `rename_then_transfer` runs first because the rename must precede transfer of the colliding name.
+- Forks are deferred indefinitely; decide per row (delete / transfer-and-detach / leave).
+
+#### 4.6 Name-conflict resolution (handled in 4.5)
+
+`execute_transfers.sh` handles `rename_then_transfer` rows by issuing:
+
+```
 gh repo rename <basename>-legacy --repo <current_owner>/<basename>
 gh repo transfer <current_owner>/<basename>-legacy meta-organvm
 ```
 
-Document the rename in the row's decision cell.
+Document the rename in the row's decision cell in `transfer-plan.md`.
 
 #### 4.7 Post-transfer verification
 
