@@ -7,6 +7,28 @@
 
 set -euo pipefail
 
+usage() {
+  cat <<EOF
+Usage: $0 [--help]
+
+Enumerates every GitHub repo the authenticated user can see, across:
+  - viewer-affiliated repos (/user/repos with affiliation=owner,collaborator,organization_member)
+  - per-org repos (/orgs/<org>/repos for every org membership)
+
+Output: \${SCRUTATOR_DATA:-data}/inventory/repos.jsonl (one JSON object per line, deduped by full_name)
+
+Environment:
+  SCRUTATOR_DATA   Base data dir. Default: ./data
+
+Requires: gh (authenticated), jq
+PAT scopes needed: repo, read:org
+EOF
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+
 OUT="${SCRUTATOR_DATA:-data}/inventory/repos.jsonl"
 mkdir -p "$(dirname "$OUT")"
 : > "$OUT"

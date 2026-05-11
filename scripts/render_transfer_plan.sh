@@ -7,12 +7,32 @@
 
 set -euo pipefail
 
+usage() {
+  cat <<EOF
+Usage: $0 [--help]
+
+Renders the categorized inventory as a Markdown plan with one table per
+non-empty bucket. Each row has an empty 'decision' column for sign-off.
+
+Environment:
+  SCRUTATOR_DATA       Base data dir. Default: ./data
+  SCRUTATOR_TARGET_ORG Target org. Default: meta-organvm
+
+Requires: jq
+EOF
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+
 DATA_DIR="${SCRUTATOR_DATA:-data}/inventory"
 IN="${DATA_DIR}/repos.categorized.jsonl"
 OUT="${DATA_DIR}/transfer-plan.md"
 TARGET="${SCRUTATOR_TARGET_ORG:-meta-organvm}"
 
 [[ -f "$IN" ]] || { echo "error: $IN not found; run scripts/categorize_repos.sh first" >&2; exit 1; }
+command -v jq >/dev/null || { echo "error: jq not installed" >&2; exit 1; }
 
 GENERATED_AT=$(date -Iseconds)
 TOTAL=$(wc -l < "$IN" | tr -d ' ')
