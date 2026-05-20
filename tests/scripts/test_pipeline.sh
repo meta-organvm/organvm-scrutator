@@ -62,12 +62,16 @@ pass "render_transfer_plan.sh: all required sections + rows present"
 DRY_OUT=$(bash "${REPO_ROOT}/scripts/execute_transfers.sh" 2>&1)
 echo "$DRY_OUT" | grep -q "DRY-RUN: gh repo rename organvm-scrutator-legacy --repo organvm/organvm-scrutator" \
   || fail "dry-run missing rename for collision row"
-echo "$DRY_OUT" | grep -q "DRY-RUN: gh repo transfer organvm/organvm-scrutator-legacy meta-organvm" \
-  || fail "dry-run missing transfer of renamed source"
-echo "$DRY_OUT" | grep -q "DRY-RUN: gh repo transfer organvm/organvm-engine meta-organvm" \
-  || fail "dry-run missing public transfer"
-echo "$DRY_OUT" | grep -q "DRY-RUN: gh repo transfer organvm/a-organvm meta-organvm" \
-  || fail "dry-run missing archived transfer"
+echo "$DRY_OUT" | grep -q "DRY-RUN: gh api -X POST repos/organvm/organvm-scrutator-legacy/transfer -f new_owner=meta-organvm" \
+  || fail "dry-run missing transfer of renamed source (REST API form)"
+echo "$DRY_OUT" | grep -q "DRY-RUN: gh api -X POST repos/organvm/organvm-engine/transfer -f new_owner=meta-organvm" \
+  || fail "dry-run missing public transfer (REST API form)"
+echo "$DRY_OUT" | grep -q "DRY-RUN: gh api -X POST repos/organvm/a-organvm/transfer -f new_owner=meta-organvm" \
+  || fail "dry-run missing archived transfer (REST API form)"
+# Sanity: gh repo transfer (which doesn't exist) must NEVER appear
+if echo "$DRY_OUT" | grep -q "gh repo transfer"; then
+  fail "dry-run still uses non-existent 'gh repo transfer' subcommand"
+fi
 # Sanity: skip buckets must NOT appear
 if echo "$DRY_OUT" | grep -q "DRY-RUN.*ajp41890/ajp41890 "; then
   fail "dry-run wrongly included keep_on_profile row"
@@ -77,13 +81,22 @@ if echo "$DRY_OUT" | grep -q "DRY-RUN.*some-fork"; then
 fi
 pass "execute_transfers.sh: dry-run output matches expectations"
 
-# --- transfer-log.jsonl integrity ---
+# --- transfer-log.jsonl integrity (after first dry-run only) ---
 LOG="$SCRUTATOR_DATA/inventory/transfer-log.jsonl"
 [[ -f "$LOG" ]] || fail "transfer-log.jsonl not written"
 DRY_COUNT=$(jq -c 'select(.outcome == "dry_run")' "$LOG" | wc -l | tr -d ' ')
 # Expected: 1 rename + 1 transfer (for rename_then_transfer) + 1 archived + 0 private + 1 public = 4
 [[ "$DRY_COUNT" == "4" ]] || fail "expected 4 dry_run log entries, got $DRY_COUNT"
 pass "transfer-log.jsonl: 4 dry_run entries recorded"
+
+# --- --yes propagates to gh repo rename ---
+YES_OUT=$(bash "${REPO_ROOT}/scripts/execute_transfers.sh" --yes 2>&1)
+echo "$YES_OUT" | grep -q "DRY-RUN: gh repo rename organvm-scrutator-legacy --repo organvm/organvm-scrutator --yes" \
+  || fail "--yes did not propagate to 'gh repo rename'"
+# Without --yes, the rename invocation must NOT carry --yes
+echo "$DRY_OUT" | grep "DRY-RUN: gh repo rename" | grep -q -- "--yes" \
+  && fail "rename without --yes wrongly included --yes"
+pass "execute_transfers.sh --yes: propagated to per-repo rename"
 
 # --- --only filter ---
 LOG_BEFORE=$(wc -l < "$LOG" | tr -d ' ')

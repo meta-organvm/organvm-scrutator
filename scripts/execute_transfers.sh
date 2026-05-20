@@ -134,12 +134,15 @@ process_bucket() {
 
     case "$bucket" in
       rename_then_transfer)
-        # Rename source first, then transfer the renamed source.
-        run_gh "$row" "rename" repo rename "${base}-legacy" --repo "$full_name" || { echo "    (rename failed; skipping)"; continue; }
-        run_gh "$row" "transfer" repo transfer "${owner}/${base}-legacy" "$TARGET" || echo "    (transfer failed)"
+        # Rename source first, then transfer the renamed source via REST API
+        # (gh has no `repo transfer` subcommand; only the API endpoint exists).
+        local rename_args=(repo rename "${base}-legacy" --repo "$full_name")
+        [[ "$YES" == "1" ]] && rename_args+=(--yes)
+        run_gh "$row" "rename" "${rename_args[@]}" || { echo "    (rename failed; skipping)"; continue; }
+        run_gh "$row" "transfer" api -X POST "repos/${owner}/${base}-legacy/transfer" -f "new_owner=${TARGET}" || echo "    (transfer failed)"
         ;;
       transfer_archived|transfer_private|transfer_public)
-        run_gh "$row" "transfer" repo transfer "$full_name" "$TARGET" || echo "    (transfer failed)"
+        run_gh "$row" "transfer" api -X POST "repos/${full_name}/transfer" -f "new_owner=${TARGET}" || echo "    (transfer failed)"
         ;;
       *)
         echo "    (unknown bucket; skipping)"; continue
