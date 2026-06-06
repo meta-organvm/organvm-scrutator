@@ -174,13 +174,15 @@ class PlanScanner:
         index = self.generate_index()
         
         if output_path is None:
-            output_path = os.environ.get(
+            output_dir = Path(os.environ.get(
                 'SCRUTATOR_INDICES',
-                str(Path(__file__).parent.parent.parent / 'data' / 'indices')
-            ) + '/visibility-index.md'
+                str(Path(__file__).parent.parent.parent.parent / 'data' / 'indices')
+            ))
+            output_path = str(output_dir / 'visibility-index.md')
         
         # Generate markdown index
         md = self._render_markdown(index)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         Path(output_path).write_text(md)
         
         # Also save JSON for programmatic access
