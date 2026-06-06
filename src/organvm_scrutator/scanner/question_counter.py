@@ -46,10 +46,11 @@ class QuestionCounter:
     QUOTED_QUESTION_PATTERN = re.compile(r'"header":\s*"([^"]+)"')
     
     def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir or os.environ.get(
+        data_root = Path(data_dir or os.environ.get(
             'SCRUTATOR_DATA',
             str(Path(__file__).parent.parent.parent.parent / 'data')
-        ) / 'raw')
+        ))
+        self.data_dir = data_root / 'raw'
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
         self.questions_file = self.data_dir / 'questions.jsonl'

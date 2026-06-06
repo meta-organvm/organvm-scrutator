@@ -57,10 +57,11 @@ class EnergyLedger:
     """
     
     def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir or os.environ.get(
+        data_root = Path(data_dir or os.environ.get(
             'SCRUTATOR_DATA',
             str(Path(__file__).parent.parent.parent.parent / 'data')
-        ) / 'raw')
+        ))
+        self.data_dir = data_root / 'raw'
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize sub-ledgers
@@ -166,7 +167,7 @@ class EnergyLedger:
         # Efficiency distribution
         efficient_sessions = sum(1 for e in self.energy_records if e.efficiency_ratio >= 1.0)
         learning_sessions = sum(1 for e in self.energy_records if 0 < e.efficiency_ratio < 1.0)
-       Exploring_sessions = sum(1 for e in self.energy_records if e.efficiency_ratio == 0.0)
+        exploring_sessions = sum(1 for e in self.energy_records if e.efficiency_ratio == 0.0)
         
         return {
             'total_sessions': total_sessions,
@@ -181,7 +182,7 @@ class EnergyLedger:
             'efficiency_distribution': {
                 'efficient': efficient_sessions,  # output >= input
                 'learning': learning_sessions,    # 0 < output < input
-                'exploring': Exploring_sessions   # output = 0
+                'exploring': exploring_sessions   # output = 0
             },
             'metabolic_state': self._classify_metabolic_state(avg_efficiency)
         }

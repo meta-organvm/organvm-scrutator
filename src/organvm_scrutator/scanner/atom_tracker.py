@@ -51,10 +51,11 @@ class AtomTracker:
     STATUS_PATTERN = re.compile(r'\*\*Status:\*\*\s*(\S+)')
     
     def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir or os.environ.get(
+        data_root = Path(data_dir or os.environ.get(
             'SCRUTATOR_DATA',
             str(Path(__file__).parent.parent.parent.parent / 'data')
-        ) / 'raw')
+        ))
+        self.data_dir = data_root / 'raw'
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
         self.atoms_file = self.data_dir / 'atoms.jsonl'

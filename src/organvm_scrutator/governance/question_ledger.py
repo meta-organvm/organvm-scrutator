@@ -2,6 +2,11 @@
 Question Ledger — Tracks questions (imported from scanner for re-export compatibility)
 """
 
-from .question_counter import QuestionCounter, Question
+from organvm_scrutator.scanner.question_counter import Question, QuestionCounter
 
-__all__ = ["QuestionCounter", "Question"]
+
+class QuestionLedger(QuestionCounter):
+    """Governance-facing compatibility wrapper for question storage."""
+
+
+__all__ = ["QuestionLedger", "QuestionCounter", "Question"]
